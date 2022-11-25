@@ -96,7 +96,7 @@ class IMGraph:
                 # For every newly activated nodes
                 for node in new_active:
                     # Determine neighbors that become influenced
-                    np.random.seed(i)       # set random seed
+                    np.random.seed(i+5001)       # set random seed
                     # sampling
                     success = np.random.uniform(0,1,len(self.G.neighbors(node,mode="out"))) < self.p
                     # newly activated nodes
@@ -221,7 +221,7 @@ class IMGraph:
         self.method_seed_map["CELF"] = [self.G.vs[idx]["_nx_name"] for idx in S]
         return
     
-    def get_RRS(self):
+    def get_RRS(self) -> list:
         """
         Inputs:
             G: igraph Graph
@@ -229,7 +229,9 @@ class IMGraph:
         """
         source = choice(self.G.vs.indices)
         # mask = np.random.uniform(0, 1, len(self.G.neighbors(source,mode="out"))) < self.p
-        samp_G = np.array(self.G.get_edgelist())[np.random.uniform(0, 1, self.m) < self.p]
+        dir_G = self.G.copy()
+        dir_G.to_directed()
+        samp_G = np.array(dir_G.get_edgelist())[np.random.uniform(0, 1, self.m*2) < self.p]
 
         new_nodes, RRS0 = [source], [source]
         while new_nodes:
@@ -242,19 +244,25 @@ class IMGraph:
             RRS0 = RRS
         return RRS
     
-    def run_RIS(self) -> None:
+    def run_RIS(self, num_mc=None) -> None:
         st_time = time.time()
-        R = [self.get_RRS() for _ in range(self.mc)]
-
+        if num_mc is None:
+            num_mc = self.mc
+        R = [self.get_RRS() for _ in range(num_mc)]
+        print("Number of MC simulations for RIS:", num_mc)
         SEED, timelapse = [], []
 
         for _ in range(self.k):
             flat_list = [item for sublist in R for item in sublist]
+            if len(flat_list) == 0:
+                break
+            print(Counter(flat_list).most_common())
             seed = Counter(flat_list).most_common()[0][0]
             SEED.append(seed)
             R = [rrs for rrs in R if seed not in rrs]
             timelapse.append(time.time() - st_time)
-        
+        for _ in range(self.k - len(SEED)):
+            SEED.append(choice(list(set(range(self.n)) - set(SEED))))
         # self.method_spread_map["RIS"] = SPREAD
         self.method_time_map["RIS"] = timelapse
         self.method_seed_idx["RIS"] = SEED

@@ -28,7 +28,8 @@ def vis_methods_spread(IM_G:IMGraph, **kwargs) -> None:
     plt.xticks(IM_G.k_list)
     plt.xlabel(r"$k$", size=10)
     plt.ylabel("Expected Spread", size=10, fontdict=font)
-    
+    if "to_path" in kwargs.keys():
+        plt.savefig(kwargs["to_path"])
     plt.show()
 
 def vis_methods_time(IM_G:IMGraph, **kwargs) -> None:
@@ -45,4 +46,6 @@ def vis_methods_time(IM_G:IMGraph, **kwargs) -> None:
     plt.xticks(IM_G.k_list)
     plt.xlabel(r"$k$", size=10)
     plt.ylabel("Expected Spread", size=10)
+    if "to_path" in kwargs.keys():
+        plt.savefig(kwargs["to_path"])
     plt.show()
