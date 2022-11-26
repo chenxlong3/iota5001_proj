@@ -28,3 +28,8 @@ def read_mtx(path,
         nodetype=nodetype,
         data=data,
     )
+
+def get_num_col(file_name):
+    with open(file_name, "rb") as f:
+        line = next(f)
+        return len(line.decode("utf-8").split(' '))

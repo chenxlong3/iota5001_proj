@@ -28,8 +28,8 @@ def vis_methods_spread(IM_G:IMGraph, **kwargs) -> None:
     plt.xticks(IM_G.k_list)
     plt.xlabel(r"$k$", size=10)
     plt.ylabel("Expected Spread", size=10, fontdict=font)
-    if "to_path" in kwargs.keys():
-        plt.savefig(kwargs["to_path"])
+    if "save_to_path" in kwargs.keys():
+        plt.savefig(kwargs["save_to_path"])
     plt.show()
 
 def vis_methods_time(IM_G:IMGraph, **kwargs) -> None:
@@ -42,10 +42,10 @@ def vis_methods_time(IM_G:IMGraph, **kwargs) -> None:
         plt.plot(IM_G.k_list, IM_G.method_time_map[method],  marker=method_marker[method], label=method, markersize=8, mfc="None", linewidth=1)
         
     plt.legend()
-    plt.title("Time Cost of Different Methods", size=15)
+    plt.title("Time Cost of Different Methods", size=15, fontdict=font)
     plt.xticks(IM_G.k_list)
     plt.xlabel(r"$k$", size=10)
-    plt.ylabel("Expected Spread", size=10)
-    if "to_path" in kwargs.keys():
-        plt.savefig(kwargs["to_path"])
+    plt.ylabel("Time Cost (seconds)", size=10, fontdict=font)
+    if "save_to_path" in kwargs.keys():
+        plt.savefig(kwargs["save_to_path"])
     plt.show()

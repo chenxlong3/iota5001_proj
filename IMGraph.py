@@ -21,7 +21,8 @@ class IMGraph:
         eps:float = 0.2,
         l:int = 1,
         max_k = 5,
-        k_step = 1
+        k_step = 1,
+        directed = False
     ) -> None:
         self.file_path = file_path
         self.p = p
@@ -35,7 +36,7 @@ class IMGraph:
         self.l = l
         self.k_list = [i for i in range(1, max_k+1, k_step)]
         try:
-            self.G_nx = self.load_G_nx()
+            self.G_nx = self.load_G_nx(directed)
             
         except Exception as e:
             print("Failed to load the graph by networkx")
@@ -58,16 +59,17 @@ class IMGraph:
         self.p = p
         return
     
-    def load_G_nx(self) -> nx.classes.graph.Graph:
+    def load_G_nx(self, directed = False):
+        _create_using = nx.DiGraph if directed else nx.Graph
         if self.file_path.endswith("gml"):
             return nx.read_gml(self.file_path)
         elif self.file_path.endswith("mtx"):
-            return read_mtx(self.file_path)
+            return read_mtx(self.file_path, create_using=_create_using, skip=2)
         elif self.file_path.endswith("edges"):
             try:
-                return nx.read_edgelist(self.file_path)
+                return nx.read_edgelist(self.file_path, create_using=_create_using)
             except:
-                return nx.read_edgelist(self.file_path, data=(("weight", float),))
+                return nx.read_edgelist(self.file_path, data=[("attr_" + str(i), float) for i in range(get_num_col(self.file_path) - 2)], create_using=_create_using)
         print("Cannot process such a file format")
         return None
 
@@ -96,7 +98,7 @@ class IMGraph:
                 # For every newly activated nodes
                 for node in new_active:
                     # Determine neighbors that become influenced
-                    np.random.seed(i+5001)       # set random seed
+                    # np.random.seed(i+5001)       # set random seed
                     # sampling
                     success = np.random.uniform(0,1,len(self.G.neighbors(node,mode="out"))) < self.p
                     # newly activated nodes
@@ -256,13 +258,15 @@ class IMGraph:
             flat_list = [item for sublist in R for item in sublist]
             if len(flat_list) == 0:
                 break
-            print(Counter(flat_list).most_common())
+            
+            # print(Counter(flat_list).most_common())
             seed = Counter(flat_list).most_common()[0][0]
             SEED.append(seed)
             R = [rrs for rrs in R if seed not in rrs]
             timelapse.append(time.time() - st_time)
         for _ in range(self.k - len(SEED)):
             SEED.append(choice(list(set(range(self.n)) - set(SEED))))
+            timelapse.append(time.time() - st_time)
         # self.method_spread_map["RIS"] = SPREAD
         self.method_time_map["RIS"] = timelapse
         self.method_seed_idx["RIS"] = SEED
@@ -324,3 +328,11 @@ class IMGraph:
         self.run_RIS()
         self.estimate_spread("RIS")
         return
+    
+    def get_properties(self) -> None:
+        return {
+            "density": nx.density(self.G_nx),
+            "diameter": nx.diameter(self.G_nx),
+            "avg_shortest_path_length": nx.average_shortest_path_length(self.G_nx),
+            "clustering_coefficient": nx.average_clustering(self.G_nx),
+        }
