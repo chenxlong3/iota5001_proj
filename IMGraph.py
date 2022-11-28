@@ -35,6 +35,7 @@ class IMGraph:
         self.eps = eps
         self.l = l
         self.k_list = [i for i in range(1, max_k+1, k_step)]
+        self.directed = directed
         try:
             self.G_nx = self.load_G_nx(directed)
             
@@ -232,7 +233,9 @@ class IMGraph:
         source = choice(self.G.vs.indices)
         # mask = np.random.uniform(0, 1, len(self.G.neighbors(source,mode="out"))) < self.p
         dir_G = self.G.copy()
-        dir_G.to_directed()
+        if not self.directed:
+            dir_G.to_directed()
+        
         samp_G = np.array(dir_G.get_edgelist())[np.random.uniform(0, 1, self.m*2) < self.p]
 
         new_nodes, RRS0 = [source], [source]
@@ -330,9 +333,10 @@ class IMGraph:
         return
     
     def get_properties(self) -> None:
+        giant_comp = self.G_nx.subgraph(sorted(nx.connected_components(self.G_nx), key=len, reverse=True)[0])
         return {
-            "density": nx.density(self.G_nx),
-            "diameter": nx.diameter(self.G_nx),
-            "avg_shortest_path_length": nx.average_shortest_path_length(self.G_nx),
-            "clustering_coefficient": nx.average_clustering(self.G_nx),
+            "density": nx.density(giant_comp),
+            "diameter": nx.diameter(giant_comp),
+            "avg_shortest_path_length": nx.average_shortest_path_length(giant_comp),
+            "clustering_coefficient": nx.average_clustering(giant_comp),
         }

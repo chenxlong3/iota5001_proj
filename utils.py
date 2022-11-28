@@ -1,5 +1,5 @@
 import networkx as nx
-
+import pickle
 proxy_metrics = ["pagerank", "outdegree", "betweenness"]
 
 def read_mtx(path,
@@ -33,3 +33,12 @@ def get_num_col(file_name):
     with open(file_name, "rb") as f:
         line = next(f)
         return len(line.decode("utf-8").split(' '))
+
+def save_instance(obj, file_path):
+    with open(file_path, "wb") as f:
+        pickle.dump(obj, f)
+    
+def load_instance(file_path):
+    with open(file_path, "rb") as f:
+        res = pickle.load(f)
+    return res
