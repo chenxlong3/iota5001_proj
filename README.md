@@ -2,6 +2,7 @@
 This repo is for the data project in course IOTA 5001, mainly focusing on algorithms for Influence Maximization.
 
 # File Tree
+```
 .
 ├── IMGraph.py
 ├── IM_G_instances
@@ -13,3 +14,5 @@ This repo is for the data project in course IOTA 5001, mainly focusing on algori
 ├── presentation
 ├── utils.py
 └── vis_functions.py
+```
+
