@@ -45,14 +45,17 @@ def vis_methods(IM_G: IMGraph, **kwargs) -> None:
 
     plt.show()
 
-def vis_feature_delta(feature_names, feature_data, delta_list, **kwargs):
+def vis_feature_delta(feature_names, feature_data, delta_list, line=False, **kwargs):
     fig_size = (12, 2.5)
     if "figsize" in kwargs.keys():
         fig_size= kwargs["figsize"]
     plt.figure(figsize=fig_size)
     for i, name, data in zip(range(len(feature_names)), feature_names, feature_data):
         plt.subplot(1, 4, i+1)
-        plt.scatter(data, delta_list)
+        if line:
+            plt.plot(data, delta_list)
+        else:
+            plt.scatter(data, delta_list)
         plt.xlabel(name, fontdict=font)
         plt.ylabel(r"$\delta$", fontdict=font)
     plt.tight_layout()
