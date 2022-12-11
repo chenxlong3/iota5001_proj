@@ -15,10 +15,11 @@ from utils import *
 class IMGraph:
     def __init__(
         self,
-        file_path: str, 
+        file_path: str = "", 
+        G_nx = None,
         p:float = .5,
         mc:int = 1000,
-        eps:float = 0.2,
+        eps:float = 0.3,
         l:int = 1,
         max_k = 5,
         k_step = 1,
@@ -36,8 +37,12 @@ class IMGraph:
         self.l = l
         self.k_list = [i for i in range(1, max_k+1, k_step)]
         self.directed = directed
+        self.theta_tim = -1
         try:
-            self.G_nx = self.load_G_nx(directed)
+            if self.file_path == "" and G_nx is not None:
+                self.G_nx = G_nx
+            else:
+                self.G_nx = self.load_G_nx(directed)
             
         except Exception as e:
             print("Failed to load the graph by networkx")
@@ -116,16 +121,15 @@ class IMGraph:
     
     def brute_force(self) -> None:
         SPREAD = []
-        for k in tqdm(range(1, self.k+1)):
-            combs = combinations(range(self.n), k)
-            max_spread = 0
-            max_seeds = []
-            for c in tqdm(combs):
-                cur_res = self.IC(list(c))
-                if cur_res > max_spread:
-                    max_spread = cur_res
-                    max_seeds = c
-            SPREAD.append(max_spread)
+        combs = combinations(range(self.n), self.k)
+        max_spread = 0
+        max_seeds = []
+        for c in tqdm(combs):
+            cur_res = self.IC(list(c))
+            if cur_res > max_spread:
+                max_spread = cur_res
+                max_seeds = c
+        SPREAD.append(max_spread)
         self.method_spread_map["EXACT"] = SPREAD
         self.method_seed_idx["EXACT"] = max_seeds
 
@@ -282,7 +286,8 @@ class IMGraph:
         kpt = self.kpt_estimation()
         lam = (8+2*self.eps)*self.n*(l*np.log(n) + np.log(comb(n, k)) + np.log(2))*np.power(eps, -2)
         theta = int(np.ceil(lam / kpt))
-        print(theta)
+        self.theta_tim = theta
+        print("Number of RR sets for TIM", theta)
         R = [self.get_RRS() for _ in range(theta)]
         SEED, timelapse = [], []
 
@@ -331,8 +336,15 @@ class IMGraph:
         self.run_RIS()
         self.estimate_spread("RIS")
         return
-    
-    def get_properties(self) -> None:
+
+    # def run_sketch(self) -> None:
+    #     if self.theta_tim == -1:
+    #         print("Please run TIM first to determine the number of RR sets.")
+    #         return
+        
+    #     return
+
+    def get_properties(self) -> dict:
         giant_comp = self.G_nx.subgraph(sorted(nx.connected_components(self.G_nx), key=len, reverse=True)[0])
         return {
             "density": nx.density(giant_comp),
